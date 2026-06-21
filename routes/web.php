@@ -8,19 +8,21 @@ use App\Http\Controllers\PresenceController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\JobController;
+use App\Http\Controllers\CandidatureController; // NOUVEAU
 
-// Redirection de l'accueil
 Route::get('/', function () {
     return redirect()->route('login');
 });
 
-// Page publique Carrières (HORS CONNEXION)
+// Page publique Carrières
 Route::get('/carrieres', [JobController::class, 'publicIndex'])->name('jobs.public');
+// NOUVEAU : Route pour soumettre le formulaire de candidature
+Route::post('/carrieres/{job}/postuler', [CandidatureController::class, 'store'])->name('candidatures.store');
 
 // Espace Employé
 Route::get('/mon-bulletin', [EmployeeController::class, 'myPayslip'])->middleware(['auth'])->name('employee.mypayslip');
 
-// Dashboard dynamique
+// Dashboard
 Route::get('/dashboard', function () {
     $user = Auth::user();
     if ($user->role === 'admin') {
@@ -35,7 +37,6 @@ Route::get('/dashboard', function () {
     }
 })->middleware(['auth'])->name('dashboard');
 
-// Routes Employés
 Route::resource('employees', EmployeeController::class)->middleware(['auth']);
 Route::post('/employees/{id}/upload-contrat', [EmployeeController::class, 'uploadContract'])->name('employees.uploadContrat');
 Route::get('/employees/{id}/download-contrat', [EmployeeController::class, 'downloadContract'])->name('employees.downloadContrat');
@@ -51,21 +52,22 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/parametres', [SettingController::class, 'index'])->name('settings.index');
     Route::post('/parametres', [SettingController::class, 'update'])->name('settings.update');
     
-    // Routes Recrutement
+    // Recrutement
     Route::get('/admin/recrutement', [JobController::class, 'adminIndex'])->name('jobs.admin');
     Route::post('/admin/recrutement', [JobController::class, 'store'])->name('jobs.store');
     Route::patch('/admin/recrutement/{id}/status', [JobController::class, 'updateStatus'])->name('jobs.updateStatus');
     Route::delete('/admin/recrutement/{id}', [JobController::class, 'destroy'])->name('jobs.destroy');
+    
+    // NOUVEAU : Voir les candidatures d'une offre + Télécharger CV
+    Route::get('/admin/recrutement/{job}/candidatures', [CandidatureController::class, 'index'])->name('candidatures.index');
+    Route::get('/candidatures/{id}/download-cv', [CandidatureController::class, 'downloadCv'])->name('candidatures.downloadCv');
 });
 
 Route::post('/leaves', [LeaveController::class, 'store'])->name('leaves.store');
 Route::get('/payroll', [EmployeeController::class, 'payrollIndex'])->name('payroll.index');
 require __DIR__.'/auth.php';
 
-// Pointage
 Route::post('/check-in', [PresenceController::class, 'checkIn'])->name('presence.checkin');
 Route::post('/check-out', [PresenceController::class, 'checkOut'])->name('presence.checkout');
 Route::get('/admin/pointage', [PresenceController::class, 'adminIndex'])->name('presence.admin');
-
-// Départements
 Route::resource('departments', DepartmentController::class);

@@ -89,9 +89,9 @@
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                 
                                 <!-- PREPARATION CANDIDATURES (Grisé pour l'instant) -->
-                                <button disabled class="text-gray-300 cursor-not-allowed mr-3" title="Bientôt disponible (Suivi des candidatures)">
+                                <a href="{{ route('candidatures.index', $job->id) }}" class="text-emerald-600 hover:text-emerald-800 mr-3" title="Voir les candidatures">
                                     <i class="fas fa-users text-lg"></i>
-                                </button>
+                                </a>
 
                                 <form action="{{ route('jobs.destroy', $job->id) }}" method="POST" class="inline">
                                     @csrf

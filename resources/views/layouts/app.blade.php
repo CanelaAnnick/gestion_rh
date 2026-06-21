@@ -170,6 +170,9 @@
                             elseif (str_contains($routeActuelle, 'jobs')) {
                                 $titre = 'Recrutement';
                             }
+                            elseif (str_contains($routeActuelle, 'candidatures')) {
+                                $titre = 'Suivi des candidatures';
+                            }
                         }
                     @endphp
                     <h2 class="text-lg md:text-xl font-semibold text-gray-800 truncate">{{ $titre }}</h2>
