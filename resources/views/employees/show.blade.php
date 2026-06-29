@@ -203,6 +203,7 @@
                         {{ session('success') }}
                     </div>
                 @endif
+                
 
                 <form action="{{ route('messages.send', $employee->id) }}" method="POST" class="space-y-4">
                     @csrf

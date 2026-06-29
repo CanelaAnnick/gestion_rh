@@ -9,12 +9,15 @@ class Candidature extends Model
 {
     use HasFactory;
 
-    // Les champs qu'on a le droit de remplir
     protected $fillable = [
-        'job_id', 'first_name', 'last_name', 'email', 'phone', 'cv_path', 'status'
+        'job_id', 'first_name', 'last_name', 'email', 'phone', 'cv_path', 'status', 'notes', 'onboarding_data'
     ];
 
-    // Relation : Une candidature appartient à une offre d'emploi
+    // Convertit automatiquement le JSON en tableau PHP pour qu'on puisse le manipuler facilement
+    protected $casts = [
+        'onboarding_data' => 'array',
+    ];
+
     public function job()
     {
         return $this->belongsTo(Job::class);

@@ -75,9 +75,21 @@
                             <i class="fas fa-building w-6 text-center"></i>
                             <span class="ml-3 font-medium">Départements</span>
                         </a>
+                        <a href="{{ route('reminders.admin') }}" class="sidebar-link flex items-center px-4 py-3 rounded-lg hover:bg-green-800 transition-colors {{ request()->routeIs('reminders*') ? 'active' : '' }}">
+                            <i class="fas fa-bell w-6 text-center"></i>
+                            <span class="ml-3 font-medium">Rappels RH</span>
+                        </a>
                         <a href="{{ route('settings.index') }}" class="sidebar-link flex items-center px-4 py-3 rounded-lg hover:bg-green-800 transition-colors {{ request()->routeIs('settings*') ? 'active' : '' }}">
                             <i class="fas fa-cog w-6 text-center"></i>
                             <span class="ml-3 font-medium">Paramètres</span>
+                        </a>
+                        <a href="{{ route('formations.admin') }}" class="sidebar-link flex items-center px-4 py-3 rounded-lg hover:bg-green-800 transition-colors {{ request()->routeIs('formations.admin*') || request()->routeIs('formations.create') ? 'active' : '' }}">
+                            <i class="fas fa-graduation-cap w-6 text-center"></i>
+                            <span class="ml-3 font-medium">Formations</span>
+                        </a>
+                        <a href="{{ route('evaluations.admin') }}" class="sidebar-link flex items-center px-4 py-3 rounded-lg hover:bg-green-800 transition-colors {{ request()->routeIs('evaluations*') ? 'active' : '' }}">
+                            <i class="fas fa-chart-bar w-6 text-center"></i>
+                            <span class="ml-3 font-medium">Évaluations</span>
                         </a>
                         <a href="{{ route('jobs.admin') }}" class="sidebar-link flex items-center px-4 py-3 rounded-lg hover:bg-green-800 transition-colors {{ request()->routeIs('jobs*') ? 'active' : '' }}">
                             <i class="fas fa-user-plus w-6 text-center"></i>
@@ -103,6 +115,14 @@
                         <a href="{{ route('employees.downloadContrat', Auth::id()) }}" class="sidebar-link flex items-center px-4 py-3 rounded-lg hover:bg-green-800 transition-colors">
                             <i class="fas fa-file-pdf w-6 text-center"></i>
                             <span class="ml-3 font-medium">Mes Documents</span>
+                        </a>
+                        <a href="{{ route('formations.employee') }}" class="sidebar-link flex items-center px-4 py-3 rounded-lg hover:bg-green-800 transition-colors">
+                            <i class="fas fa-graduation-cap w-6 text-center"></i>
+                            <span class="ml-3 font-medium">Mes Formations</span>
+                        </a>
+                        <a href="{{ route('evaluations.employee') }}" class="sidebar-link flex items-center px-4 py-3 rounded-lg hover:bg-green-800 transition-colors">
+                            <i class="fas fa-chart-bar w-6 text-center"></i>
+                            <span class="ml-3 font-medium">Mes Évaluations</span>
                         </a>
                         <a href="{{ route('jobs.public') }}" class="sidebar-link flex items-center px-4 py-3 rounded-lg hover:bg-green-800 transition-colors">
                             <i class="fas fa-briefcase w-6 text-center"></i>
@@ -170,8 +190,23 @@
                             elseif (str_contains($routeActuelle, 'jobs')) {
                                 $titre = 'Recrutement';
                             }
+                            elseif (str_contains($routeActuelle, 'onboarding')) {
+                                $titre = 'Intégration du candidat';
+                            }
                             elseif (str_contains($routeActuelle, 'candidatures')) {
                                 $titre = 'Suivi des candidatures';
+                            }
+                            elseif (str_contains($routeActuelle, 'evaluations')) {
+                                $titre = 'Évaluations';
+                            }
+                            elseif ($routeActuelle === 'evaluations.employee') {
+                                $titre = 'Mes évaluations';
+                            }
+                            elseif (str_contains($routeActuelle, 'formations')) {
+                                $titre = 'Formations';
+                            }
+                            elseif (str_contains($routeActuelle, 'reminders')) {
+                                $titre = 'Bien-être & Rappels';
                             }
                         }
                     @endphp

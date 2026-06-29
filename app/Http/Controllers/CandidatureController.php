@@ -56,4 +56,65 @@ class CandidatureController extends Controller
         
         return response()->download($path);
     }
+        // Mettre à jour le statut et les notes d'un candidat
+        public function update(Request $request, $id)
+        {
+            $candidature = Candidature::findOrFail($id);
+            
+            $request->validate([
+                'status' => 'required|in:nouveau,entretien,retenu,refuse',
+                'notes' => 'nullable|string'
+            ]);
+    
+            $candidature->update([
+                'status' => $request->status,
+                'notes' => $request->notes
+            ]);
+    
+            return back()->with('success', 'Candidature mise à jour avec succès.');
+        }
+            // Afficher la page d'intégration (Checklist)
+    // Afficher la page d'intégration (Checklist)
+    public function onboardingIndex($id)
+    {
+        $candidature = Candidature::findOrFail($id);
+        
+        $defaultTasks = [
+            'Contrat de travail signé' => false,
+            'Pièce d\'identité (CNI/Passport) fournie' => false,
+            'RIB (Relevé d\'identité bancaire) fourni' => false,
+            'Attestation de domicile fournie' => false,
+            'Certificat de travail précédent fourni' => false,
+            'Matériel informatique attribué' => false,
+            'Accès aux logiciels configurés' => false,
+            'Visite médicale effectuée' => false,
+        ];
+
+        // NOUVEAU : Si la base est vide, on sauvegarde les tâches par défaut DANS la base immédiatement !
+        if (is_null($candidature->onboarding_data)) {
+            $candidature->update(['onboarding_data' => $defaultTasks]);
+            $tasks = $defaultTasks;
+        } else {
+            $tasks = $candidature->onboarding_data;
+        }
+
+        return view('jobs.admin-onboarding', compact('candidature', 'tasks'));
+    }
+
+    // Mettre à jour une case de la checklist
+    public function onboardingUpdate(Request $request, $id)
+    {
+        $candidature = Candidature::findOrFail($id);
+        $tasks = $candidature->onboarding_data ?? [];
+
+        // On inverse l'état de la case cochée (coché -> décoché, décoché -> coché)
+        $taskName = $request->task_name;
+        if (isset($tasks[$taskName])) {
+            $tasks[$taskName] = !$tasks[$taskName];
+        }
+
+        $candidature->update(['onboarding_data' => $tasks]);
+
+        return response()->json(['success' => true]);
+    }
 }
