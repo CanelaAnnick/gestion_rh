@@ -24,6 +24,7 @@ Route::post('/carrieres/{job}/postuler', [CandidatureController::class, 'store']
 
 // Espace Employé
 Route::get('/mon-bulletin', [EmployeeController::class, 'myPayslip'])->middleware(['auth'])->name('employee.mypayslip');
+Route::post('/modifier-mot-de-passe', [EmployeeController::class, 'changePassword'])->middleware(['auth'])->name('employee.changePassword');
 Route::get('/mes-evaluations', [EvaluationController::class, 'employeeIndex'])->middleware(['auth'])->name('evaluations.employee');
 Route::get('/mes-formations', [FormationController::class, 'employeeIndex'])->middleware(['auth'])->name('formations.employee');
 
@@ -35,7 +36,15 @@ Route::get('/dashboard', function () {
         $pendingLeaves = \App\Models\Leave::where('status', 'en_attente')->count();
         $totalSalary = \App\Models\User::where('role', 'employee')->sum('salaire');
         $pendingLeaveRequests = \App\Models\Leave::where('status', 'en_attente')->orderBy('created_at', 'desc')->take(5)->get();
-        return view('dashboard', compact('totalEmployees', 'pendingLeaves', 'totalSalary', 'pendingLeaveRequests'));
+        
+        // NOUVEAU : Compter les employés par département
+        $departmentDistribution = \App\Models\User::where('role', 'employee')
+            ->select('departement', \Illuminate\Support\Facades\DB::raw('count(*) as total'))
+            ->groupBy('departement')
+            ->orderByDesc('total')
+            ->get();
+
+        return view('dashboard', compact('totalEmployees', 'pendingLeaves', 'totalSalary', 'pendingLeaveRequests', 'departmentDistribution'));
     } else {
         $myLeaves = \App\Models\Leave::where('user_id', $user->id)->orderBy('created_at', 'desc')->get();
         return view('dashboard-employee', compact('myLeaves'));

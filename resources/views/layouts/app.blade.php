@@ -215,14 +215,24 @@
                     <!-- CÔTÉ DROIT : Profil + Cloche -->
                     <div class="flex items-center space-x-2 md:space-x-4">
                         
-                        <!-- CLOCHE DE NOTIFICATIONS (Visible partout) -->
+                        <!-- CLOCHE DE NOTIFICATIONS -->
                         <div class="relative">
+                            @php
+                                // On calcule le vrai nombre de notifications non lues directement ici
+                                $dynamicNotifCount = 0;
+                                if(Auth::user()->role === 'admin') {
+                                    $dynamicNotifCount = \App\Models\Leave::where('status', 'en_attente')->count();
+                                } else {
+                                    // Pour l'employé, on compte SEULEMENT ses demandes EN ATTENTE
+                                    $dynamicNotifCount = \App\Models\Leave::where('user_id', Auth::id())->where('status', 'en_attente')->count();
+                                }
+                            @endphp
+
                             <button onclick="document.getElementById('notif-dropdown').classList.toggle('hidden')" class="relative text-gray-400 hover:text-green-600 transition focus:outline-none p-2">
                                 <i class="fas fa-bell text-lg"></i>
-                                @if(isset($notifCount) && $notifCount > 0)
-                                    <span class="absolute top-0 right-0 h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center font-bold">{{ $notifCount }}</span>
+                                @if($dynamicNotifCount > 0)
+                                    <span class="absolute top-0 right-0 h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center font-bold">{{ $dynamicNotifCount }}</span>
                                 @endif
-
                             </button>
                             
                             <!-- Menu déroulant des notifications -->
@@ -230,10 +240,11 @@
                                 <div class="p-3 bg-gray-50 border-b font-semibold text-sm text-gray-700">Notifications</div>
                                 
                                 @php 
-                                    if(isset($notifCount)) {
+                                    if(Auth::user()->role === 'admin') {
                                         $pendingLeaves = \App\Models\Leave::where('status', 'en_attente')->orderBy('created_at', 'desc')->take(4)->get(); 
                                     } else {
-                                        $pendingLeaves = collect();
+                                        // On affiche les 4 dernières demandes de l'employé
+                                        $pendingLeaves = \App\Models\Leave::where('user_id', Auth::id())->orderBy('created_at', 'desc')->take(4)->get(); 
                                     }
                                 @endphp
                                 
@@ -244,8 +255,22 @@
                                                 <i class="fas fa-clock text-xs"></i>
                                             </div>
                                             <div class="min-w-0">
-                                                <p class="text-sm text-gray-900 font-medium truncate">{{ $notif->user->name }}</p>
-                                                <p class="text-xs text-gray-500">Demande de {{ strtolower($notif->type) }} en attente</p>
+                                                <p class="text-sm text-gray-900 font-medium truncate">
+                                                    @if(Auth::user()->role === 'admin')
+                                                        {{ $notif->user->name }}
+                                                    @else
+                                                        Ma demande
+                                                    @endif
+                                                </p>
+                                                <p class="text-xs text-gray-500">Demande de {{ strtolower($notif->type) }} 
+                                                    @if($notif->status === 'approuve')
+                                                        <span class="text-green-600 font-semibold">approuvée</span>
+                                                    @elseif($notif->status === 'refuse')
+                                                        <span class="text-red-600 font-semibold">refusée</span>
+                                                    @else
+                                                        <span class="text-yellow-600 font-semibold">en attente</span>
+                                                    @endif
+                                                </p>
                                             </div>
                                         </a>
                                     @empty
@@ -253,7 +278,7 @@
                                     @endforelse
                                 </div>
                                 
-                                @if(isset($notifCount) && $notifCount > 0)
+                                @if(Auth::user()->role === 'admin' && $dynamicNotifCount > 0)
                                     <a href="{{ route('leaves.index') }}" class="block p-3 text-center text-sm font-medium text-green-600 hover:bg-green-50 border-t">
                                         Voir toutes les demandes
                                     </a>
@@ -261,15 +286,58 @@
                             </div>
                         </div>
 
-                        <!-- Profil Utilisateur -->
-                        <div class="flex items-center space-x-2 md:space-x-3 border-l pl-2 md:pl-4 border-gray-200">
-                            <p class="text-sm font-bold text-gray-900 hidden lg:block truncate max-w-[120px]">{{ Auth::user()->name }}</p>
-                            <img src="{{ Auth::user()->avatar ?? 'https://ui-avatars.com/api/?name='.Auth::user()->name.'&background=16a34a&color=fff' }}" alt="Avatar" class="h-9 w-9 md:h-10 md:w-10 rounded-full border-2 border-green-500 flex-shrink-0">
+                        <!-- Profil Utilisateur (Menu déroulant pro) -->
+                        <div class="relative" id="profile-menu-container">
+                            <button onclick="document.getElementById('profile-dropdown').classList.toggle('hidden')" class="flex items-center space-x-2 md:space-x-3 border-l pl-2 md:pl-4 border-gray-200 hover:bg-gray-50 rounded-lg py-1 px-2 transition">
+                                <p class="text-sm font-bold text-gray-900 hidden lg:block truncate max-w-[120px]">{{ Auth::user()->name }}</p>
+                                <img src="{{ Auth::user()->avatar ?? 'https://ui-avatars.com/api/?name='.Auth::user()->name.'&background=16a34a&color=fff' }}" alt="Avatar" class="h-9 w-9 md:h-10 md:w-10 rounded-full border-2 border-green-500 flex-shrink-0">
+                                <i class="fas fa-chevron-down text-gray-400 text-xs hidden md:block"></i>
+                            </button>
+                            
+                            <!-- Menu déroulant -->
+                            <div id="profile-dropdown" class="hidden absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 z-50 overflow-hidden">
+                                <!-- En-tête du menu -->
+                                <div class="p-4 bg-gray-50 border-b">
+                                    <p class="text-sm font-bold text-gray-900">{{ Auth::user()->name }}</p>
+                                    <p class="text-xs text-gray-500 truncate">{{ Auth::user()->email }}</p>
+                                    <span class="inline-block mt-1 px-2 py-0.5 text-xs font-semibold rounded-full bg-emerald-100 text-emerald-800">
+                                        {{ ucfirst(Auth::user()->role) }}
+                                    </span>
+                                </div>
+                                
+                                <!-- Liens du menu -->
+                                <div class="py-2">
+                                    <a href="{{ route('employees.show', Auth::id()) }}" class="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition">
+                                        <i class="fas fa-user-circle w-5 text-center mr-3 text-gray-400"></i> Mon Profil
+                                    </a>
+                                    <a href="#" onclick="openPasswordModal(); return false;" class="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition">
+                                        <i class="fas fa-lock w-5 text-center mr-3 text-gray-400"></i> Sécurité
+                                    </a>
+                                </div>
+                                
+                                <!-- Déconnexion -->
+                                <div class="border-t border-gray-100">
+                                    <form method="POST" action="{{ route('logout') }}">
+                                        @csrf
+                                        <button type="submit" class="flex items-center w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 font-medium transition">
+                                            <i class="fas fa-sign-out-alt w-5 text-center mr-3"></i> Déconnexion
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </header>
 
                 <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 p-4 md:p-8">
+                    
+                    <!-- BLOC D'ERREUR GLOBAL (AJOUTÉ ICI) -->
+                    @if(session('error'))
+                        <div class="mb-6 bg-red-50 border-l-4 border-red-500 p-4 text-red-700 text-sm font-medium">
+                            {{ session('error') }}
+                        </div>
+                    @endif
+
                     {{ $slot }}
                 </main>
             </div>
@@ -279,13 +347,29 @@
             </div>
         @endauth
 
-        <!-- Script pour contrôler la sidebar -->
+        <!-- Script pour contrôler les menus -->
         <script>
+            // Fermer les menus déroulants si on clique en dehors
+            window.addEventListener('click', function(e) {
+                // Fermer le menu Profil
+                const profileContainer = document.getElementById('profile-menu-container');
+                const profileMenu = document.getElementById('profile-dropdown');
+                if (profileContainer && profileMenu && !profileContainer.contains(e.target)) {
+                    profileMenu.classList.add('hidden');
+                }
+
+                // Fermer la cloche de notification
+                const notifMenu = document.getElementById('notif-dropdown');
+                if (notifMenu && !notifMenu.parentElement.contains(e.target)) {
+                    notifMenu.classList.add('hidden');
+                }
+            });
+
             function openSidebar() {
                 document.getElementById('sidebar').classList.remove('-translate-x-full');
                 document.getElementById('sidebar').classList.add('translate-x-0');
                 document.getElementById('sidebar-overlay').classList.remove('hidden');
-                document.body.classList.add('overflow-hidden'); // Empêche le scroll du fond
+                document.body.classList.add('overflow-hidden'); 
             }
 
             function closeSidebar() {
@@ -296,5 +380,97 @@
             }
         </script>
         @stack('scripts')
+
+        <!-- POP-UP DE MODIFICATION DU MOT DE PASSE (UNIQUE) -->
+        <div id="password-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+            <div class="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 p-6 relative">
+                <button onclick="closePasswordModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+                
+                <h3 class="text-xl font-bold text-gray-900 mb-1">Modifier mon mot de passe</h3>
+                <p class="text-sm text-gray-500 mb-6">Assurez-vous de choisir un mot de passe sécurisé (min. 8 caractères).</p>
+
+                <form action="{{ route('employee.changePassword') }}" method="POST">
+                    @csrf
+                    
+                    <!-- AFFICHAGE DES ERREURS -->
+                    <div class="mb-4">
+                        @if($errors->has('new_password'))
+                            <div class="bg-red-50 border-l-4 border-red-500 p-3 text-red-700 text-sm flex items-center">
+                                <i class="fas fa-exclamation-circle mr-2"></i> {{ $errors->first('new_password') }}
+                            </div>
+                        @endif
+                    </div>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Ancien mot de passe</label>
+                            <input type="password" name="current_password" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Nouveau mot de passe</label>
+                            <input type="password" name="new_password" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Confirmer le nouveau mot de passe</label>
+                            <input type="password" name="new_password_confirmation" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 text-sm">
+                        </div>
+                        <button type="submit" class="w-full bg-emerald-600 text-white py-2.5 px-4 rounded-lg text-sm font-semibold hover:bg-emerald-700 transition">
+                            Mettre à jour
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- SCRIPT UNIQUE -->
+        <script>
+            // Fonctions pour le pop-up de mot de passe
+            function openPasswordModal() {
+                document.getElementById('password-modal').classList.remove('hidden');
+                document.body.classList.add('overflow-hidden');
+            }
+
+            function closePasswordModal() {
+                document.getElementById('password-modal').classList.add('hidden');
+                document.body.classList.remove('overflow-hidden');
+            }
+
+                        // Rouvrir le pop-up SEULEMENT s'il y a une erreur de mot de passe
+                        document.addEventListener("DOMContentLoaded", function() {
+            @if($errors->has('new_password'))
+                openPasswordModal();
+            @endif
+        });
+
+            // Fermer les menus déroulants si on clique en dehors
+            window.addEventListener('click', function(e) {
+                const profileContainer = document.getElementById('profile-menu-container');
+                const profileMenu = document.getElementById('profile-dropdown');
+                if (profileContainer && profileMenu && !profileContainer.contains(e.target)) {
+                    profileMenu.classList.add('hidden');
+                }
+
+                const notifMenu = document.getElementById('notif-dropdown');
+                if (notifMenu && !notifMenu.parentElement.contains(e.target)) {
+                    notifMenu.classList.add('hidden');
+                }
+            });
+
+            function openSidebar() {
+                document.getElementById('sidebar').classList.remove('-translate-x-full');
+                document.getElementById('sidebar').classList.add('translate-x-0');
+                document.getElementById('sidebar-overlay').classList.remove('hidden');
+                document.body.classList.add('overflow-hidden'); 
+            }
+
+            function closeSidebar() {
+                document.getElementById('sidebar').classList.add('-translate-x-full');
+                document.getElementById('sidebar').classList.remove('translate-x-0');
+                document.getElementById('sidebar-overlay').classList.add('hidden');
+                document.body.classList.remove('overflow-hidden');
+            }
+        </script>
     </body>
 </html>

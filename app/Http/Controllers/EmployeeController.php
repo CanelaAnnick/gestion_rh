@@ -18,7 +18,9 @@ class EmployeeController extends Controller
 
     public function create()
     {
-        return view('employees.create');
+        // On va chercher tous les départements créés dans la base de données
+        $departments = \App\Models\Department::orderBy('name', 'asc')->get();
+        return view('employees.create', compact('departments'));
     }
 
     public function store(Request $request)
@@ -49,7 +51,9 @@ class EmployeeController extends Controller
     public function edit($id)
     {
         $employee = User::findOrFail($id);
-        return view('employees.edit', compact('employee'));
+        // On va chercher les départements pour les afficher dans la liste
+        $departments = \App\Models\Department::orderBy('name', 'asc')->get();
+        return view('employees.edit', compact('employee', 'departments'));
     }
 
     public function update(Request $request, $id)
@@ -135,7 +139,7 @@ class EmployeeController extends Controller
         $employee = User::findOrFail($id);
         
         if (!$employee->contrat_file) {
-            abort(404, 'Aucun contrat trouvé.');
+            return back()->with('error', 'Aucun contrat disponible pour le moment.');
         }
 
         $path = 'public/contrats/' . $employee->contrat_file;
@@ -205,5 +209,32 @@ class EmployeeController extends Controller
 
         // On réutilise la même vue que l'admin !
         return view('employees.payslip', compact('employee', 'salaireBrut', 'cnps', 'impot', 'totalDeductions', 'salaireNet', 'moisAnnee', 'companyName', 'cnpsRate', 'taxRate'));
+    }
+        /**
+     * Permettre à l'employé connecté de modifier son mot de passe
+     */
+    /**
+     * Permettre à l'utilisateur connecté de modifier son mot de passe
+     */
+    public function changePassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => 'required',
+            'new_password' => 'required|string|min:8|confirmed',
+        ]);
+
+        $user = Auth::user();
+
+        // 1. Vérifier que l'ancien mot de passe est correct
+        if (!Hash::check($request->current_password, $user->password)) {
+            return redirect()->back()->with('error', 'L\'ancien mot de passe est incorrect.');
+        }
+
+        // 2. Forcer la modification dans la base de données
+        $user->password = Hash::make($request->new_password);
+        $user->save();
+
+        // 3. Rediriger avec le message de succès
+        return redirect()->route('dashboard')->with('success', 'Mot de passe modifié avec succès !');
     }
 }

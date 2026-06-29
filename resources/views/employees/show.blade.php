@@ -165,9 +165,13 @@
                 <button onclick="switchTab('historique')" id="tab-historique" class="px-6 py-4 text-sm font-medium text-green-700 border-b-2 border-green-600">
                     <i class="fas fa-comments mr-2"></i> Historique des messages
                 </button>
+                
+                <!-- ON LE MASQUE SI C'EST L'EMPLOYÉ QUI REGARDE SON PROPRE PROFIL -->
+                @if(Auth::user()->role === 'admin' || Auth::id() !== $employee->id)
                 <button onclick="switchTab('ecrire')" id="tab-ecrire" class="px-6 py-4 text-sm font-medium text-gray-500 border-b-2 border-transparent hover:text-gray-700">
                     <i class="fas fa-pen-to-square mr-2"></i> Écrire un message
                 </button>
+                @endif
             </div>
 
             <!-- Contenu de l'onglet 1 : Historique -->
@@ -196,7 +200,8 @@
                 </div>
             </div>
 
-            <!-- Contenu de l'onglet 2 : Formulaire (Caché par défaut) -->
+            <!-- Contenu de l'onglet 2 : Formulaire (Caché par défaut et masqué pour l'employé) -->
+            @if(Auth::user()->role === 'admin' || Auth::id() !== $employee->id)
             <div id="content-ecrire" class="p-6 hidden">
                 @if(session('success'))
                     <div class="mb-4 bg-green-50 border-l-4 border-green-500 p-4 text-green-700 text-sm">
@@ -204,7 +209,6 @@
                     </div>
                 @endif
                 
-
                 <form action="{{ route('messages.send', $employee->id) }}" method="POST" class="space-y-4">
                     @csrf
                     <div>
@@ -220,6 +224,7 @@
                     </button>
                 </form>
             </div>
+            @endif
 
         </div>
 

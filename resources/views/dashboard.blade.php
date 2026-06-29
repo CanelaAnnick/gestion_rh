@@ -38,24 +38,26 @@
         
         <!-- Colonne de gauche : Graphique (On le garde fixe pour l'instant) -->
         <div class="lg:col-span-2 bg-white rounded-xl shadow-sm p-6">
-            <h3 class="text-lg font-bold text-gray-800 mb-6">Répartition par Département</h3>
-            <div class="h-64 flex items-end justify-around px-4">
-                <div class="flex flex-col items-center w-1/5 group">
-                    <div class="w-full md:w-16 bg-green-500 rounded-t-lg group-hover:bg-green-600 transition" style="height: 85%"></div>
-                    <span class="text-xs text-gray-500 mt-2">RH</span>
-                </div>
-                <div class="flex flex-col items-center w-1/5 group">
-                    <div class="w-full md:w-16 bg-green-300 rounded-t-lg group-hover:bg-green-400 transition" style="height: 60%"></div>
-                    <span class="text-xs text-gray-500 mt-2">IT</span>
-                </div>
-                <div class="flex flex-col items-center w-1/5 group">
-                    <div class="w-full md:w-16 bg-green-300 rounded-t-lg group-hover:bg-green-400 transition" style="height: 45%"></div>
-                    <span class="text-xs text-gray-500 mt-2">Marketing</span>
-                </div>
-                <div class="flex flex-col items-center w-1/5 group">
-                    <div class="w-full md:w-16 bg-green-400 rounded-t-lg group-hover:bg-green-500 transition" style="height: 70%"></div>
-                    <span class="text-xs text-gray-500 mt-2">Commercial</span>
-                </div>
+            <!-- Répartition par département -->
+            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                <h3 class="text-lg font-bold text-gray-800 mb-6">Répartition par département</h3>
+                
+                @forelse($departmentDistribution as $dept)
+                    <div class="mb-5 last:mb-0">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-sm font-semibold text-gray-700">{{ $dept->departement }}</span>
+                            <span class="text-sm font-bold text-gray-900">{{ $dept->total }} employé(s)</span>
+                        </div>
+                        <div class="w-full bg-gray-100 rounded-full h-3">
+                            <div class="h-3 rounded-full bg-emerald-500 transition-all duration-500" style="width: {{ ($dept->total / $totalEmployees) * 100 }}%"></div>
+                        </div>
+                    </div>
+                @empty
+                    <div class="text-center py-8 text-gray-400">
+                        <i class="fas fa-building text-3xl mb-3 block"></i>
+                        <p class="text-sm">Aucune donnée disponible.</p>
+                    </div>
+                @endforelse
             </div>
         </div>
 

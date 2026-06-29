@@ -29,13 +29,11 @@
                                 </div>
                                 <div class="col-span-6 sm:col-span-3">
                                     <label for="departement" class="block text-sm font-medium text-gray-700">Département</label>
-                                    <select id="departement" name="departement" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm">
-                                        <option value="RH">RH</option>
-                                        <option value="IT">Informatique</option>
-                                        <option value="Finance">Finance</option>
-                                        <option value="Marketing">Marketing</option>
-                                        <option value="Commercial">Commercial</option>
-                                        <option value="Juridique">Juridique</option>
+                                    <select name="departement" required class="px-4 py-3 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500 sm:text-sm">
+                                        <option value="">Sélectionner un département...</option>
+                                        @foreach($departments as $department)
+                                            <option value="{{ $department->name }}">{{ $department->name }}</option>
+                                        @endforeach
                                     </select>
                                 </div>
                                 <div class="col-span-6 sm:col-span-3">

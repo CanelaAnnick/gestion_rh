@@ -13,5 +13,7 @@ class Job extends Model
         'title', 'department', 'type', 'location', 'description', 'requirements', 'status'
     ];
     protected $dates = ['verified_at'];
-
+    protected $casts = [
+        'verified_at' => 'datetime',
+    ];
 }

@@ -30,13 +30,13 @@
                                 </div>
                                 <div class="col-span-6 sm:col-span-3">
                                     <label for="departement" class="block text-sm font-medium text-gray-700">Département</label>
-                                    <select id="departement" name="departement" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm">
-                                        <option value="RH" {{ $employee->departement == 'RH' ? 'selected' : '' }}>RH</option>
-                                        <option value="IT" {{ $employee->departement == 'IT' ? 'selected' : '' }}>Informatique</option>
-                                        <option value="Finance" {{ $employee->departement == 'Finance' ? 'selected' : '' }}>Finance</option>
-                                        <option value="Marketing" {{ $employee->departement == 'Marketing' ? 'selected' : '' }}>Marketing</option>
-                                        <option value="Commercial" {{ $employee->departement == 'Commercial' ? 'selected' : '' }}>Commercial</option>
-                                        <option value="Juridique" {{ $employee->departement == 'Juridique' ? 'selected' : '' }}>Juridique</option>
+                                    <select name="departement" required class="px-4 py-3 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500 sm:text-sm">
+                                        <option value="">Sélectionner un département...</option>
+                                        @foreach($departments as $department)
+                                            <option value="{{ $department->name }}" {{ $employee->departement === $department->name ? 'selected' : '' }}>
+                                                {{ $department->name }}
+                                            </option>
+                                        @endforeach
                                     </select>
                                 </div>
                                 <div class="col-span-6 sm:col-span-3">
@@ -51,14 +51,7 @@
                                     </select>
                                 </div>
                             </div>
-                            <div>
-                                <label for="password" class="block text-sm font-medium text-gray-700">Mot de passe (Laisser vide pour ne pas changer)</label>
-                                <input type="password" name="password" id="password" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm">
-                            </div>
-                            <div>
-                                <label for="password_confirmation" class="block text-sm font-medium text-gray-700">Confirmer mot de passe</label>
-                                <input type="password" name="password_confirmation" id="password_confirmation" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm">
-                            </div>
+
                         </div>
                         <div class="px-4 py-3 bg-gray-50 text-right sm:px-6">
                             <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
