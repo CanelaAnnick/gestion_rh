@@ -1,33 +1,33 @@
-FROM php:8.2-apache
+FROM php:8.3-apache
 
-# Installation des dépendances système + Node.js (pour Vite/Tailwind)
+# Installation des dépendances système + Node.js
 RUN apt-get update && apt-get install -y \
-    libpng-dev libonig-dev libzip-dev libpq-dev unzip curl \
+    libpng-dev libonig-dev libzip-dev libpq-dev unzip curl git \
     nodejs npm
 
 # Nettoyage
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Installation des extensions PHP nécessaires pour Laravel + PostgreSQL
-RUN docker-php-ext-install pdo_mysql pdo_pgsql mbstring exif pcntl bcmath gd zip
+# Installation des extensions PHP pour Laravel + PostgreSQL
+RUN docker-php-ext-install pdo_mysql pdo_pgsql mbstring exif pcntl bcmath gd zip opcache
 
 # Installation de Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 
-# Installation des dépendances NPM et Compilation du CSS avec Vite
+# Installation des dépendances NPM
 COPY package*.json ./
 RUN npm install
 
-# Installation des dépendances PHP avec Composer
-COPY composer.json composer.lock ./
-RUN composer install --no-interaction --optimize-autoloader --no-dev
+# Installation des dépendances PHP (on ignore les versions exactes de PHP pour éviter le bug d'erreur 2)
+COPY composer.json composer.lock* ./
+RUN COMPOSER_ALLOW_SUPERUSER=1 composer install --no-interaction --optimize-autoloader --no-dev --ignore-platform-reqs
 
-# Copie du reste du code
+# Copie du reste du code de l'application
 COPY . .
 
-# Compilation des assets (CSS/JS)
+# Compilation des assets (CSS/JS) avec Vite
 RUN npm run build
 
 # Configuration d'Apache pour que le dossier "public" soit la racine du site
@@ -39,7 +39,7 @@ RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf
 # Activation de la réécriture d'URL (pour les routes de Laravel)
 RUN a2enmod rewrite
 
-# Permissions pour le stockage (storage/link)
+# Permissions pour le stockage
 RUN chown -R www-data:www-data /var/www/html
 RUN chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
